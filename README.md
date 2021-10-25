@@ -1,2 +1,3 @@
 # BettyBlocks
-Betty Blocks custom components
+This is the github repository of Brian van den Berg
+
