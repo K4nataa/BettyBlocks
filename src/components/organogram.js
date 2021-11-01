@@ -5,7 +5,7 @@
   orientation: 'HORIZONTAL',
   jsx: (() => {
     const { env, Query, useAllQuery, useFilter } = B;
-    const { team, filter, displayError } = options;
+    const { model, filter, displayError } = options;
     const where = useFilter(filter);
     const { gql } = window.MaterialUI;
     const isDev = env === 'dev';
@@ -43,7 +43,7 @@
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="http://placekitten.com/55"
+                      src="http://placekitten.com/60"
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -75,15 +75,22 @@
       };
       return (
         <>
-          <button onClick={clickHandler}>
-            <i class="fas fa-arrow-down"></i>
+          <button
+            class="btn btn-link"
+            data-toggle="collapse"
+            data-target={classes.employee_list}
+            aria-expanded="true"
+            aria-controls="collapseOne"
+          >
+            <i class="fa" aria-hidden="true"></i>
+            button
           </button>
         </>
       );
     };
 
     //Creates the card itself and uses the TeamList to fill in the information.
-    //Line 115/116 --> if there are teams, create a new card. (this is a recursive loop)
+    //Line 119 --> if there are teams, create a new card. (this is a recursive loop)
     const Card = props => {
       const { sector } = props;
       if (sector) {
@@ -97,7 +104,7 @@
                       <div>
                         <h4>{item.name}</h4>
                         <i className="fas fa-chevron-up">
-                          <expandButton name={item.name} />
+                          <expandButton />
                         </i>
                       </div>
                       <hr />
@@ -126,24 +133,16 @@
       let obj = {};
       const result = [];
       data.forEach(item => {
-        Object.keys(item).forEach(key => {
-          //   if (obj[key] && obj[key] !== item[key]) {
-          //    return (obj[key] = [obj[key], item[key]].flat());
-          //}
-          debugger;
-          if (obj[key] && obj[key] !== item.teams[key]) {
-            if (item.teams.length > 0) {
-              obj = obj[key] = [obj[key], item[key]].flat();
-            }
-          } else {
-            return;
-          }
-          //return (obj[key] = item[key]);
-        });
-        result.push(obj);
+        if (item.teams.length > 0) {
+          Object.keys(item).forEach(key => {
+            obj = obj[key] = [obj[key], item[key]].flat();
+          });
+          result.push(obj);
+        }
       });
 
       console.log(result);
+      return result;
     }
 
     //Creates a card that recursively loops through all cards using a GraphQL query.
