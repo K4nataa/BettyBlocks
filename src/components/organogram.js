@@ -10,26 +10,30 @@
     const { gql } = window.MaterialUI;
     const isDev = env === 'dev';
     const GET_USERINFO = gql`
-      query Item {
-        allTeam {
-          results {
+    query Item {
+      allTeambridge(where: {parentTeam: {name: {eq: "Product"}}}) {
+        results {
+          id
+          childTeam {
             id
             name
-            hierachyLevel
-            teams {
-              id
-              hierachyLevel
-              name
+            hierarchyLevel
               webuserteams {
-                webuser {
-                  firstName
-                  lastName
-                }
+              webuser {
+                firstName
+                lastName
               }
             }
           }
+          parentTeam {
+            id
+            name
+            hierarchyLevel
+          }
         }
       }
+    }
+    
     `;
 
     //Creates the icon, link and name for the Card.
@@ -43,7 +47,7 @@
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="http://placekitten.com/60"
+                      src="http://placekitten.com/420"
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -97,12 +101,12 @@
         return (
           <>
             <ul>
-              {sector.map(item => (
+              {sector.map(teamBridge => (
                 <>
-                  <li key={item.id}>
+                  <li key={teamBridge.id}>
                     <span>
                       <div>
-                        <h4>{item.name}</h4>
+                        <h4>{teamBridge.childTeam.name}</h4>
                         <i className="fas fa-chevron-up">
                           <expandButton />
                         </i>
@@ -110,13 +114,13 @@
                       <hr />
                       <div className={classes.employee_list}>
                         <a href="google.com">
-                          {item.webuserteams?.length && (
-                            <TeamList teammembers={item.webuserteams} />
+                          {teamBridge.childTeam.webuserteams?.length && (
+                            <TeamList teammembers={teamBridge.childTeam.webuserteams} />
                           )}
                         </a>
                       </div>
                     </span>
-                    {item.teams?.length && <Card sector={item.teams} />}
+                    {teamBridge.childTeam?.length && <Card sector={teamBridge.childTeam} />}
                     {/* {item.teams && (item.teams > 0) &&
                       item.teams.map(team => <Card sector={team.teams} />)} */}
                   </li>
@@ -129,25 +133,49 @@
       return <> </>;
     };
 
-    function RemoveDupes(data) {
-      let obj = {};
-      const result = [];
-      data.forEach(item => {
-        if (item.teams.length > 0) {
-          Object.keys(item).forEach(key => {
-            obj = obj[key] = [obj[key], item[key]].flat();
-          });
-          result.push(obj);
-        }
-      });
 
-      console.log(result);
-      return result;
+    // Create a Sort function that uses your 'data' which originates from LoadCards()
+    // ref: https://stackoverflow.com/questions/56993745/restructure-json-format-in-react-native
+    function SortJSON(data) {
+      //TODO: use your data from LoadCards() and loop through each key
+      // then you have to somehow magically order these with statements so they fall
+      //in the right hierarchy... good luck :p
+
+      //We moeten een nieuwe array bouwen die de data sorteert van je Graphql array:
+      // 1: We moeten een nieuwe lege array aanmaken.
+      //    Daarna loopen we door de volledige data en maken we een nieuw object aan
+      //    voor ieder childTeam waar we alle nodige properties van het opgehaalde
+      //    object in stoppen, We moeten voor ieder nieuw childTeam object een property toevoegen
+      //    waar we de waarde van de parentTeam.name (parentName) in opslaan
+      //    en een lege array property die we later gaan gebruiken voor de eventuele childTeams van het object
+      // 2: Push al deze nieuwe objecten in de nieuwe array.
+      // 3: Nu hebben we een array van teamObjecten die allemaal op hetzelfde level staan.
+      //    Dan moeten we ieder teamObject(1) in deze nieuwe array checken of deze een parentName waarde heeft.
+      //    Zo ja, dan moeten we in de array checken of er een ander teamObject(2) bestaat met deze naam
+      //    en teamObject(2) pushen naar teamObject(1).childrenArray[] en teamObject(2) verwijderen uit de array. Good luck :P
+
+
+      debugger;
+      const teams = [];
+      data.allTeambridge.results.forEach((newTeam)  => {
+        var newTeam = {
+          id: newTeam.id,
+          childId: newTeam.childTeam.id,
+          childName: newTeam.childTeam.name,
+          parentName: newTeam.parentTeam.name,
+          childWebusers: [],
+          childArray: [],
+        };
+        // console.log(newTeam);
+        // console.log("My parent team is: ", newTeam.parentTeam);
+        teams.push(newTeam);
+      });
+      console.log(teams);
     }
 
     //Creates a card that recursively loops through all cards using a GraphQL query.
     //TODO: Make use of the Betty DataModel and see if it is possible to filter out duplicates
-    //and when you click on a button, pass an ID or Name so you display only that 'team' starting on HierarchyLevel 1
+    //and when you click on a button, pass an ID or Name so you display only that 'team' starting on HierarchyLevel 0
     function LoadCards() {
       return (
         <Query fetchPolicy="network-only" query={GET_USERINFO}>
@@ -158,11 +186,11 @@
             if (error) {
               return `Error! ${error.Message}`;
             }
-            // console.log(data);
-            RemoveDupes(data.allTeam.results);
+
+            SortJSON(data);
             return (
               <div className={classes.org_tree}>
-                <Card sector={data.allTeam.results} />
+                <Card sector={data.allTeambridge.results} />
               </div>
             );
           }}

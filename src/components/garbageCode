@@ -1,0 +1,15 @@
+function RemoveDupes(data) {
+    let obj = {};
+    const result = [];
+    data.forEach(item => {
+      if (item.teams.length > 0) {
+        Object.keys(item).forEach(key => {
+          obj = obj[key] = [obj[key], item[key]].flat();
+        });
+        result.push(obj);
+      }
+    });
+
+    console.log(result);
+    return result;
+  }
