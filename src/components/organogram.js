@@ -9,9 +9,16 @@
     const where = useFilter(filter);
     const { gql } = window.MaterialUI;
     const isDev = env === 'dev';
+    const [state, setState] = React.useState(false);
+    const toggleTeamList = props => {
+      const { info } = props;
+      setState(s => !s);
+      //console.log("My hierarchyLeel is: ", info.childName );
+      console.log(state);
+    };
     const GET_USERINFO = gql`
     query Item {
-      allTeambridge(where: {parentTeam: {name: {eq: "Product"}}}) {
+      allTeambridge {
         results {
           id
           childTeam {
@@ -32,7 +39,7 @@
           }
         }
       }
-    }
+    }    
     
     `;
 
@@ -42,7 +49,7 @@
       if (teammembers.length > 0) {
         return (
           <>
-            {teammembers.map(webuser => (
+            {teammembers.map(user => (
               <>
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
@@ -53,10 +60,9 @@
                     />
                   </div>
                   <p>
-                    {webuser.webuser
-                      ? webuser.webuser.firstName +
+                    {user ? user.firstName +
                         ' ' +
-                        webuser.webuser.lastName
+                        user.lastName
                       : ''}
                   </p>
                 </div>
@@ -67,34 +73,8 @@
       }
       return <p>-</p>;
     };
-    //TODO: Create a clickable icon that onClick() shows or hides the underlying Cards
-    //This isn't working correctly yet.
-    const expandButton = props => {
-      const { level, name } = props;
-      const [state, setState] = React.useState(false);
-      const clickHandler = () => {
-        // if (state == false) setState(true);
-        // else setState(false);
-        setState(!true);
-      };
-      return (
-        <>
-          <button
-            class="btn btn-link"
-            data-toggle="collapse"
-            data-target={classes.employee_list}
-            aria-expanded="true"
-            aria-controls="collapseOne"
-          >
-            <i class="fa" aria-hidden="true"></i>
-            button
-          </button>
-        </>
-      );
-    };
 
     //Creates the card itself and uses the TeamList to fill in the information.
-    //Line 119 --> if there are teams, create a new card. (this is a recursive loop)
     const Card = props => {
       const { sector } = props;
       if (sector) {
@@ -106,23 +86,23 @@
                   <li key={teamBridge.id}>
                     <span>
                       <div>
-                        <h4>{teamBridge.childTeam.name}</h4>
+                        <h4>{teamBridge.childName}</h4>
                         <i className="fas fa-chevron-up">
-                          <expandButton />
+                          <button onClick={toggleTeamList} >{state ? "▼" : "▲"}</button>
                         </i>
                       </div>
                       <hr />
+                      {state ? 
                       <div className={classes.employee_list}>
                         <a href="google.com">
-                          {teamBridge.childTeam.webuserteams?.length && (
-                            <TeamList teammembers={teamBridge.childTeam.webuserteams} />
+                          {teamBridge.childWebusers?.length && (
+                            <TeamList teammembers={teamBridge.childWebusers} />
                           )}
                         </a>
                       </div>
+                      : null }
                     </span>
-                    {teamBridge.childTeam?.length && <Card sector={teamBridge.childTeam} />}
-                    {/* {item.teams && (item.teams > 0) &&
-                      item.teams.map(team => <Card sector={team.teams} />)} */}
+                    {teamBridge.childArray?.length ? <Card sector={teamBridge.childArray} /> : ""}
                   </li>
                 </>
               ))}
@@ -133,49 +113,62 @@
       return <> </>;
     };
 
-
-    // Create a Sort function that uses your 'data' which originates from LoadCards()
-    // ref: https://stackoverflow.com/questions/56993745/restructure-json-format-in-react-native
-    function SortJSON(data) {
-      //TODO: use your data from LoadCards() and loop through each key
-      // then you have to somehow magically order these with statements so they fall
-      //in the right hierarchy... good luck :p
-
-      //We moeten een nieuwe array bouwen die de data sorteert van je Graphql array:
-      // 1: We moeten een nieuwe lege array aanmaken.
-      //    Daarna loopen we door de volledige data en maken we een nieuw object aan
-      //    voor ieder childTeam waar we alle nodige properties van het opgehaalde
-      //    object in stoppen, We moeten voor ieder nieuw childTeam object een property toevoegen
-      //    waar we de waarde van de parentTeam.name (parentName) in opslaan
-      //    en een lege array property die we later gaan gebruiken voor de eventuele childTeams van het object
-      // 2: Push al deze nieuwe objecten in de nieuwe array.
-      // 3: Nu hebben we een array van teamObjecten die allemaal op hetzelfde level staan.
-      //    Dan moeten we ieder teamObject(1) in deze nieuwe array checken of deze een parentName waarde heeft.
-      //    Zo ja, dan moeten we in de array checken of er een ander teamObject(2) bestaat met deze naam
-      //    en teamObject(2) pushen naar teamObject(1).childrenArray[] en teamObject(2) verwijderen uit de array. Good luck :P
-
-
-      debugger;
+    function SortJSON(data, filter) {
       const teams = [];
+      const jsonObj = []; 
+
       data.allTeambridge.results.forEach((newTeam)  => {
-        var newTeam = {
+        var teamObject = {
           id: newTeam.id,
-          childId: newTeam.childTeam.id,
-          childName: newTeam.childTeam.name,
-          parentName: newTeam.parentTeam.name,
-          childWebusers: [],
+          childId: newTeam.childTeam?.id,
+          childName: newTeam.childTeam?.name,
+          parentName: newTeam.parentTeam?.name,
+          childHierarchyLevel: newTeam.childTeam?.hierarchyLevel,
+          childWebusers: newTeam.childTeam?.webuserteams.map(x => x.webuser),
           childArray: [],
         };
-        // console.log(newTeam);
-        // console.log("My parent team is: ", newTeam.parentTeam);
-        teams.push(newTeam);
+        // You now have a single dimension array of individual objects.
+        teams.push(teamObject);
       });
-      console.log(teams);
+      
+      teams.forEach((secondteam) => {
+        if(secondteam.parentName) {
+          if(teams.find(x => x.childName === secondteam.parentName && secondteam.parentName !== secondteam.childName)) {
+            const parentObj = teams.find(x => x.childName === secondteam.parentName);
+            parentObj.childArray.push(secondteam); 
+          }
+        }
+        if (parentObj) {
+          jsonObj.push(parentObj);
+        }
+      });
+      
+      //const Seen is an Array
+      const uniqueObj = new Set();
+      const result = jsonObj.filter(
+        (el) => {
+          if (el.childHierarchyLevel === 0) { 
+            // add the id to the set
+            // check if the set has the id
+            // if has return true it means its not unique so you want to filter it, if the has return false it means its unique and you return true to keep it in the array
+            const duplicate = uniqueObj.has(el.id); 
+            uniqueObj.add(el.id)
+            return !duplicate
+          } else {
+            return false
+          }
+        }
+      );
+      //This is your filter for later :ThumbsUp:
+      //console.log("My jsonObj contains: ", result.filter(x => x.childName === "Product"));
+      console.log("My jsonObj contains: ", result);
+      return result.filter(x => x.childName === filter);
+
     }
+  
 
     //Creates a card that recursively loops through all cards using a GraphQL query.
-    //TODO: Make use of the Betty DataModel and see if it is possible to filter out duplicates
-    //and when you click on a button, pass an ID or Name so you display only that 'team' starting on HierarchyLevel 0
+    //TODO: Make use of the Betty DataModel.
     function LoadCards() {
       return (
         <Query fetchPolicy="network-only" query={GET_USERINFO}>
@@ -187,10 +180,10 @@
               return `Error! ${error.Message}`;
             }
 
-            SortJSON(data);
+            var result = SortJSON(data, "Product");
             return (
               <div className={classes.org_tree}>
-                <Card sector={data.allTeambridge.results} />
+                <Card sector={result} />
               </div>
             );
           }}
