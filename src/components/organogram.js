@@ -9,13 +9,6 @@
     const where = useFilter(filter);
     const { gql } = window.MaterialUI;
     const isDev = env === 'dev';
-    const [state, setState] = React.useState(false);
-    const toggleTeamList = props => {
-      const { info } = props;
-      setState(s => !s);
-      //console.log("My hierarchyLeel is: ", info.childName );
-      console.log(state);
-    };
     const GET_USERINFO = gql`
     query Item {
       allTeambridge {
@@ -25,6 +18,7 @@
             id
             name
             hierarchyLevel
+            hideChildren
               webuserteams {
               webuser {
                 firstName
@@ -36,6 +30,7 @@
             id
             name
             hierarchyLevel
+            hideChildren
           }
         }
       }
@@ -54,7 +49,7 @@
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="http://placekitten.com/420"
+                      src="https://placekitten.com/1000/500"
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -71,44 +66,64 @@
           </>
         );
       }
-      return <p>-</p>;
+      return null;
     };
+    
+    //TODO: Ik moet een CardManager maken, die de informatie van mijn Cards binnenkrijgt.   :Check:
+    //      Als ik op de button klik, moet ik het Id hebben van die Card.                   
+    //      vervolgens kan ik kijken in de 'cards' of hij een ChildArray heeft of niet,
+    //      zo ja, gebruik de setCards om de bool 'hideChildren' te veranderen van true naar false.
+    //      
+    const CardManager = (props) => {
+    const { cardData } = props;
+    const [cards, setCards] = React.useState(cardData);
+    return (
+      <>
+        {cards[0].childArray.map(card => (        
+          <Card cardData={card} /> 
+        ))
+      }
+      </>
+    )
 
-    //Creates the card itself and uses the TeamList to fill in the information.
+    }
+    //  Creates the card itself and uses the TeamList to fill in the information.
+    //  TODO: check line 281 for more information.
     const Card = props => {
-      const { sector } = props;
-      if (sector) {
-        return (
-          <>
-            <ul>
-              {sector.map(teamBridge => (
-                <>
-                  <li key={teamBridge.id}>
-                    <span>
-                      <div>
-                        <h4>{teamBridge.childName}</h4>
-                        <i className="fas fa-chevron-up">
-                          <button onClick={toggleTeamList} >{state ? "▼" : "▲"}</button>
-                        </i>
-                      </div>
-                      <hr />
-                      {state ? 
-                      <div className={classes.employee_list}>
-                        <a href="google.com">
-                          {teamBridge.childWebusers?.length && (
-                            <TeamList teammembers={teamBridge.childWebusers} />
-                          )}
-                        </a>
-                      </div>
-                      : null }
-                    </span>
-                    {teamBridge.childArray?.length ? <Card sector={teamBridge.childArray} /> : ""}
-                  </li>
-                </>
-              ))}
-            </ul>
-          </>
-        );
+      const { cardData, visibility } = props;
+      const [ childVisibility, setChildVisibility ] = React.useState(true);
+
+      // console.log("My cardData is: ", cardData);
+      if (cardData) {
+          return (
+              <ul>
+                  <li key={cardData.id}>
+                      <span>
+                        <div>
+                          <h4>{cardData.childName}</h4>
+                          <h3>{visibility ? "Hallo": "Doei"}</h3> 
+                          <i className="fas fa-chevron-up">
+                            <button>yep</button>
+                          </i>
+                        </div>
+                        <hr />
+                        <div className={classes.employee_list}>
+                          <a href="google.com">
+                            {cardData.childWebusers?.length && (
+                              <TeamList teammembers={cardData.childWebusers} />
+                            )}
+                          </a>
+                        </div>
+                      </span>
+                      {
+                        cardData.childArray?.length > 1 &&
+                        cardData.childArray.map(child => (
+                          <Card cardData={child.childArray} visibility={childVisibility}/> 
+                      ))
+                        } 
+                    </li>
+              </ul>
+          );
       }
       return <> </>;
     };
@@ -124,6 +139,7 @@
           childName: newTeam.childTeam?.name,
           parentName: newTeam.parentTeam?.name,
           childHierarchyLevel: newTeam.childTeam?.hierarchyLevel,
+          hideChildren: newTeam.childTeam?.hideChildren,
           childWebusers: newTeam.childTeam?.webuserteams.map(x => x.webuser),
           childArray: [],
         };
@@ -161,7 +177,6 @@
       );
       //This is your filter for later :ThumbsUp:
       //console.log("My jsonObj contains: ", result.filter(x => x.childName === "Product"));
-      console.log("My jsonObj contains: ", result);
       return result.filter(x => x.childName === filter);
 
     }
@@ -180,10 +195,13 @@
               return `Error! ${error.Message}`;
             }
 
-            var result = SortJSON(data, "Product");
+            var result = SortJSON(data, "CEO/VP");
+            console.log("My jsonObj contains: ", result);
+
             return (
               <div className={classes.org_tree}>
-                <Card sector={result} />
+                <CardManager cardData={result} />
+                {/* <Card sector={result} /> */}
               </div>
             );
           }}
@@ -193,14 +211,77 @@
 
     if (isDev) {
       return (
-        <div>
-          <p>Howdy there stranger</p>
+        <div className={classes.org_tree}>
+          <ul>
+            <li>
+              <span>
+              <div>
+                <h4>model.childName</h4>
+                <i className="fas fa-chevron-up">
+                  <button>▲</button>
+                </i>
+              </div>
+              <hr />
+              <div className={classes.employee}>
+                  <div className={classes.employee_img}>
+                    <img
+                      src="https://placekitten.com/1000/500"
+                      className={classes.profile_pic}
+                      alt="Betty Logo"
+                    />
+                  </div>
+                  <p>
+                    user.Fullname
+                  </p>
+                </div>
+              </span>
+            </li>
+            <li>
+              <span>
+              <div>
+                <h4>model.childName</h4>
+                <i className="fas fa-chevron-up">
+                  <button>▲</button>
+                </i>
+              </div>
+              <hr />
+              <div className={classes.employee}>
+                  <div className={classes.employee_img}>
+                    <img
+                      src="https://placekitten.com/1000/500"
+                      className={classes.profile_pic}
+                      alt="Betty Logo"
+                    />
+                  </div>
+                  <p>
+                    user.Fullname
+                    </p>
+                </div>
+                <div className={classes.employee}>
+                  <div className={classes.employee_img}>
+                    <img
+                      src="https://placekitten.com/1000/500"
+                      className={classes.profile_pic}
+                      alt="Betty Logo"
+                    />
+                  </div>
+                  <p>
+                    user.Fullname
+                    </p>
+                </div>
+              </span>
+            </li>
+          </ul>
         </div>
       );
     }
 
     return LoadCards();
   })(),
+  //  Right now the Cards are returned in a <ul> with an underlying <ul> that contains <uls> instead of <li>. 
+  //  If you compare this to the organogram.bettywebblocks you can see the difference.
+  //  That is why it currently looks wonky. This has to be looked at first before continuing with the show/hide button.
+  //  Either make it so that the Card() creates a single ul with multiple li, or edit the CSS so that it duplicates the current organizing chart
   styles: () => () => ({
     body: {
       paddingLeft: '10px',
@@ -220,6 +301,7 @@
       paddingTop: '10px',
 
       '& ul': {
+        display: 'inline-block',
         position: 'relative',
         padding: '1em 0',
         margin: '0 auto',
@@ -240,7 +322,7 @@
         verticalAlign: 'top',
         textAlign: 'center',
         listStyleType: 'none',
-        position: 'relative',
+        // position: 'relative',
         padding: '1em 0.5em 0 0.5em',
       },
       '& li::before, & li::after': {

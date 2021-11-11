@@ -1,0 +1,53 @@
+function RemoveDupes(data) {
+    let obj = {};
+    const result = [];
+    data.forEach(item => {
+      if (item.teams.length > 0) {
+        Object.keys(item).forEach(key => {
+          obj = obj[key] = [obj[key], item[key]].flat();
+        });
+        result.push(obj);
+      }
+    });
+
+    console.log(result);
+    return result;
+  }
+
+
+
+          // Ik moet een functie hebben die de state van de onderliggende cards kan wijzigen
+        // setState(state => !state); 
+        // if(children) {          
+        //   children.childArray.forEach((team) => {
+        //     //If team has a parentName matching the childName of the toplevel, 
+        //     //then hide the children.
+        //     if(team.childName) {
+        //       team.hideChildren = setVisibility(state);
+        //       console.log("my hideChildren value is: ", team.hideChildren);
+
+        //     }
+        //   });
+        //   console.log(state);
+        // }
+
+
+
+
+        const [ childVisibility, setChildVisibility ] = React.useState(true);
+        const setVisibility = (value) => {
+          setChildVisibility(!value)
+        }
+        const t   = this;
+        const toggleCard = props => {  
+          // cardData.forEach((item) => {
+          //   //Loop through sector, if sector.childName === clicked parentName, hide sector.childArray
+          //   if(item.childName === props.childName) {
+          //     console.log("Klopt wel!")
+          //     setChildVisibility(visibility => !visibility);
+          //   }
+          //   else {console.log("Klopt niet...");}
+  
+          // });
+          setChildVisibility(visibility => !visibility);
+        };
