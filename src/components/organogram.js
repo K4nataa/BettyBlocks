@@ -5,7 +5,7 @@
   orientation: 'HORIZONTAL',
   jsx: (() => {
     const { env, Query, useAllQuery, useFilter } = B;
-    const { model, filter, displayError } = options;
+    const { filter, displayError } = options;
     const where = useFilter(filter);
     const { gql } = window.MaterialUI;
     const isDev = env === 'dev';
@@ -78,12 +78,12 @@
     const { cardData } = props;
     const [cards, setCards] = React.useState(cardData);
     return (
-      <>
+      <ul>
         {cards[0].childArray.map(card => (        
           <Card cardData={card} /> 
         ))
       }
-      </>
+      </ul>
     )
 
     }
@@ -96,33 +96,33 @@
       // console.log("My cardData is: ", cardData);
       if (cardData) {
           return (
-              <ul>
-                  <li key={cardData.id}>
-                      <span>
-                        <div>
-                          <h4>{cardData.childName}</h4>
-                          <h3>{visibility ? "Hallo": "Doei"}</h3> 
-                          <i className="fas fa-chevron-up">
-                            <button>yep</button>
-                          </i>
-                        </div>
-                        <hr />
-                        <div className={classes.employee_list}>
-                          <a href="google.com">
-                            {cardData.childWebusers?.length && (
-                              <TeamList teammembers={cardData.childWebusers} />
-                            )}
-                          </a>
-                        </div>
-                      </span>
-                      {
-                        cardData.childArray?.length > 1 &&
-                        cardData.childArray.map(child => (
-                          <Card cardData={child.childArray} visibility={childVisibility}/> 
-                      ))
-                        } 
-                    </li>
-              </ul>
+            <li key={cardData.id}>
+                <span>
+                  <div>
+                    <h4>{cardData.childName}</h4>
+                    <h3>{visibility ? "Hallo": "Doei"}</h3> 
+                    <i className="fas fa-chevron-up">
+                      <button>yep</button>
+                    </i>
+                  </div>
+                  <hr />
+                  <div className={classes.employee_list}>
+                    <a href="google.com">
+                      {cardData.childWebusers?.length && (
+                        <TeamList teammembers={cardData.childWebusers} />
+                      )}
+                    </a>
+                  </div>
+                </span>
+                <ul>
+                {
+                  cardData.childArray?.length > 1 &&
+                  cardData.childArray.map(child => (
+                    <Card cardData={child} visibility={childVisibility}/> 
+                ))
+                  } 
+                  </ul>
+              </li>
           );
       }
       return <> </>;
@@ -301,7 +301,6 @@
       paddingTop: '10px',
 
       '& ul': {
-        display: 'inline-block',
         position: 'relative',
         padding: '1em 0',
         margin: '0 auto',
@@ -322,7 +321,7 @@
         verticalAlign: 'top',
         textAlign: 'center',
         listStyleType: 'none',
-        // position: 'relative',
+        position: 'relative',
         padding: '1em 0.5em 0 0.5em',
       },
       '& li::before, & li::after': {
