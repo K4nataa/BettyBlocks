@@ -94,6 +94,12 @@
         const [ childVisibility, setChildVisibility ] = React.useState(true);
   
         // console.log("My cardData is: ", cardData);
+        const toggleTeamList = props => {
+          const { info } = props;
+          setState(s => !s);
+          //console.log("My hierarchyLeel is: ", info.childName );
+          console.log(state);
+        };
         if (cardData) {
             return (
                 <ul>
@@ -103,7 +109,7 @@
                             <h4>{cardData.childName}</h4>
                             <h3>{visibility ? "Hallo": "Doei"}</h3> 
                             <i className="fas fa-chevron-up">
-                              <button>yep</button>
+                            <button onClick={toggleTeamList} >{visibility ? "▼" : "▲"}</button>
                             </i>
                           </div>
                           <hr />

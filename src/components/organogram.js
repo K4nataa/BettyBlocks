@@ -4,10 +4,9 @@
   allowedTypes: [],
   orientation: 'HORIZONTAL',
   jsx: (() => {
-    const { env, Query, useAllQuery, useFilter } = B;
-    const { filter, displayError } = options;
-    const where = useFilter(filter);
+    const { env, Query, Icon } = B;
     const { gql } = window.MaterialUI;
+    const [parentName, setParentName] = React.useState('CEO/VP');
     const isDev = env === 'dev';
     const GET_USERINFO = gql`
     query Item {
@@ -18,26 +17,22 @@
             id
             name
             hierarchyLevel
-            hideChildren
-              webuserteams {
-              webuser {
+            	webusers {
+                id
                 firstName
                 lastName
               }
-            }
           }
           parentTeam {
             id
             name
             hierarchyLevel
-            hideChildren
           }
         }
       }
-    }    
+    }   
     
     `;
-
     //Creates the icon, link and name for the Card.
     const TeamList = props => {
       const { teammembers } = props;
@@ -54,29 +49,27 @@
                       alt="Betty Logo"
                     />
                   </div>
+                  <a href={"https://bro-intranet.betty.app/profile/" + user?.id}>
                   <p>
                     {user ? user.firstName +
                         ' ' +
                         user.lastName
-                      : ''}
+                      : ' '}
                   </p>
+                  </a>
                 </div>
               </>
             ))}
           </>
         );
       }
-      return null;
+      return;
     };
     
-    //TODO: Ik moet een CardManager maken, die de informatie van mijn Cards binnenkrijgt.   :Check:
-    //      Als ik op de button klik, moet ik het Id hebben van die Card.                   
-    //      vervolgens kan ik kijken in de 'cards' of hij een ChildArray heeft of niet,
-    //      zo ja, gebruik de setCards om de bool 'hideChildren' te veranderen van true naar false.
-    //      
     const CardManager = (props) => {
     const { cardData } = props;
-    const [cards, setCards] = React.useState(cardData);
+    const [cards] = React.useState(cardData);
+    debugger;
     return (
       <ul>
         {cards[0].childArray.map(card => (        
@@ -87,51 +80,60 @@
     )
 
     }
+    // useEffect(() => {
+    // })
+    B.defineFunction('Set Top Level Value', evt => setParentName(evt.target.innerText));
     //  Creates the card itself and uses the TeamList to fill in the information.
     //  TODO: check line 281 for more information.
     const Card = props => {
-      const { cardData, visibility } = props;
+      const { cardData } = props;
       const [ childVisibility, setChildVisibility ] = React.useState(true);
 
-      // console.log("My cardData is: ", cardData);
+      const toggleTeamList = props => {
+        setChildVisibility(childVisibility => !childVisibility);
+      };
       if (cardData) {
           return (
             <li key={cardData.id}>
                 <span>
                   <div>
                     <h4>{cardData.childName}</h4>
-                    <h3>{visibility ? "Hallo": "Doei"}</h3> 
-                    <i className="fas fa-chevron-up">
-                      <button>yep</button>
-                    </i>
+                    {childVisibility ? 
+                    <Icon onClick={toggleTeamList} name="ExpandMore" />
+                    :
+                    <Icon onClick={toggleTeamList} name="ExpandLess" />
+                    }
                   </div>
-                  <hr />
                   <div className={classes.employee_list}>
-                    <a href="google.com">
-                      {cardData.childWebusers?.length && (
-                        <TeamList teammembers={cardData.childWebusers} />
+                      {cardData.childWebusers.length > 0 && (
+                        <>
+                          <hr />
+                          <TeamList teammembers={cardData.childWebusers} />
+                        </>
                       )}
-                    </a>
                   </div>
                 </span>
-                <ul>
                 {
-                  cardData.childArray?.length > 1 &&
-                  cardData.childArray.map(child => (
+                  childVisibility ?
+                  cardData.childArray?.length > 0 &&
+                  <ul>
+                  {cardData.childArray.map(child => (
                     <Card cardData={child} visibility={childVisibility}/> 
                 ))
+                  }
+                </ul>
+                : null
                   } 
-                  </ul>
               </li>
           );
       }
       return <> </>;
     };
 
-    function SortJSON(data, filter) {
+    function SortJSON(data, ToplevelName) {
+      //console.log('My unsorted data is: ', data)
       const teams = [];
       const jsonObj = []; 
-
       data.allTeambridge.results.forEach((newTeam)  => {
         var teamObject = {
           id: newTeam.id,
@@ -139,19 +141,19 @@
           childName: newTeam.childTeam?.name,
           parentName: newTeam.parentTeam?.name,
           childHierarchyLevel: newTeam.childTeam?.hierarchyLevel,
-          hideChildren: newTeam.childTeam?.hideChildren,
-          childWebusers: newTeam.childTeam?.webuserteams.map(x => x.webuser),
+          childWebusers: newTeam.childTeam?.webusers,
           childArray: [],
         };
         // You now have a single dimension array of individual objects.
         teams.push(teamObject);
       });
       
-      teams.forEach((secondteam) => {
-        if(secondteam.parentName) {
-          if(teams.find(x => x.childName === secondteam.parentName && secondteam.parentName !== secondteam.childName)) {
-            const parentObj = teams.find(x => x.childName === secondteam.parentName);
-            parentObj.childArray.push(secondteam); 
+      // Find all child-teams of a team
+      teams.forEach((child) => {
+        if(child.parentName) {
+          if(teams.find(x => x.childName === child.parentName && child.parentName !== child.childName)) {
+            const parentObj = teams.find(x => x.childName === child.parentName);
+            parentObj.childArray.push(child); 
           }
         }
         if (parentObj) {
@@ -175,10 +177,10 @@
           }
         }
       );
-      //This is your filter for later :ThumbsUp:
-      //console.log("My jsonObj contains: ", result.filter(x => x.childName === "Product"));
-      return result.filter(x => x.childName === filter);
+      const formattedTopLvl = ToplevelName.toUpperCase().trim();
 
+      if(ToplevelName) return result.filter(x => x.childName.toUpperCase() === formattedTopLvl)
+      return;
     }
   
 
@@ -195,13 +197,11 @@
               return `Error! ${error.Message}`;
             }
 
-            var result = SortJSON(data, "CEO/VP");
-            console.log("My jsonObj contains: ", result);
-
+            var result = SortJSON(data, parentName);
+            //console.log('My JSON data contains: ', result);
             return (
               <div className={classes.org_tree}>
                 <CardManager cardData={result} />
-                {/* <Card sector={result} /> */}
               </div>
             );
           }}
@@ -217,15 +217,13 @@
               <span>
               <div>
                 <h4>model.childName</h4>
-                <i className="fas fa-chevron-up">
-                  <button>▲</button>
-                </i>
+                  <Icon name="ExpandMore" />
               </div>
               <hr />
               <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="https://placekitten.com/1000/500"
+                      src=""
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -240,15 +238,13 @@
               <span>
               <div>
                 <h4>model.childName</h4>
-                <i className="fas fa-chevron-up">
-                  <button>▲</button>
-                </i>
+                <Icon name="ExpandMore" />
               </div>
               <hr />
               <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="https://placekitten.com/1000/500"
+                      src=""
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -260,7 +256,7 @@
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="https://placekitten.com/1000/500"
+                      src=""
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -278,10 +274,6 @@
 
     return LoadCards();
   })(),
-  //  Right now the Cards are returned in a <ul> with an underlying <ul> that contains <uls> instead of <li>. 
-  //  If you compare this to the organogram.bettywebblocks you can see the difference.
-  //  That is why it currently looks wonky. This has to be looked at first before continuing with the show/hide button.
-  //  Either make it so that the Card() creates a single ul with multiple li, or edit the CSS so that it duplicates the current organizing chart
   styles: () => () => ({
     body: {
       paddingLeft: '10px',
@@ -305,6 +297,7 @@
         padding: '1em 0',
         margin: '0 auto',
         textAlign: 'center',
+        whiteSpace: 'nowrap',
       },
       '& ul:first-child': {
         overflow: 'auto',
@@ -378,6 +371,7 @@
         color: '#333',
         position: 'relative',
         top: '1px',
+        width: '200px',
         whiteSpace: 'normal',
         cursor: 'default',
         boxShadow: '0px 0px 3px 1px #e5e5e5',
@@ -443,6 +437,11 @@
     },
     employee_list: {
       padding: '0.5em 0 0 0.4em',
+      '& a': {
+        textDecoration: 'none',
+        marginLeft: '10px',
+        color: 'black',
+      },
     },
   }),
 }))();
