@@ -31,7 +31,7 @@
   "dependencies": {
     "@apollo/client": "^3.4.16",
     "@apollo/react-components": "^4.0.0",
-    "@betty-blocks/cli": "^25.6.0",
+    "@betty-blocks/cli": "^25.7.0",
     "@material-ui/core": "^4.12.3",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "@material-ui/pickers": "^3.3.10",

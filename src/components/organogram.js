@@ -21,6 +21,7 @@
                 id
                 firstName
                 lastName
+                profileImageUrl
               }
           }
           parentTeam {
@@ -34,6 +35,7 @@
     
     `;
     //Creates the icon, link and name for the Card.
+    //TODO: Eivormige fotos...
     const TeamList = props => {
       const { teammembers } = props;
       if (teammembers.length > 0) {
@@ -44,7 +46,7 @@
                 <div className={classes.employee}>
                   <div className={classes.employee_img}>
                     <img
-                      src="https://placekitten.com/1000/500"
+                      src={user.profileImageUrl}
                       className={classes.profile_pic}
                       alt="Betty Logo"
                     />
@@ -80,11 +82,7 @@
     )
 
     }
-    // useEffect(() => {
-    // })
     B.defineFunction('Set Top Level Value', evt => setParentName(evt.target.innerText));
-    //  Creates the card itself and uses the TeamList to fill in the information.
-    //  TODO: check line 281 for more information.
     const Card = props => {
       const { cardData } = props;
       const [ childVisibility, setChildVisibility ] = React.useState(true);
@@ -131,7 +129,6 @@
     };
 
     function SortJSON(data, ToplevelName) {
-      //console.log('My unsorted data is: ', data)
       const teams = [];
       const jsonObj = []; 
       data.allTeambridge.results.forEach((newTeam)  => {
@@ -185,7 +182,6 @@
   
 
     //Creates a card that recursively loops through all cards using a GraphQL query.
-    //TODO: Make use of the Betty DataModel.
     function LoadCards() {
       return (
         <Query fetchPolicy="network-only" query={GET_USERINFO}>
@@ -198,7 +194,7 @@
             }
 
             var result = SortJSON(data, parentName);
-            //console.log('My JSON data contains: ', result);
+            console.log('My JSON data contains: ', result);
             return (
               <div className={classes.org_tree}>
                 <CardManager cardData={result} />
@@ -208,7 +204,7 @@
         </Query>
       );
     }
-
+    //TODO: maak hier een column van (styling moet anders)
     if (isDev) {
       return (
         <div className={classes.org_tree}>

@@ -8,20 +8,11 @@
       name: 'Organogram',
       options: [
         {
-          value: '',
-          type: 'MODEL',
-          label: 'Model',
-          key: 'team',
-        },
-        {
-          type: 'FILTER',
-          label: 'Filter',
-          key: 'filter',
-          value: {},
-          configuration: {
-            dependsOn: 'team',
-          },
-        },
+          type: 'TEXT',
+          label: 'Tab name',
+          key: 'content',
+          value: ''
+        }
       ],
       descendants: [],
     },
