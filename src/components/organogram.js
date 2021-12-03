@@ -35,7 +35,6 @@
     
     `;
     //Creates the icon, link and name for the Card.
-    //TODO: Eivormige fotos...
     const TeamList = props => {
       const { teammembers } = props;
       if (teammembers.length > 0) {
@@ -51,7 +50,7 @@
                       alt="Betty Logo"
                     />
                   </div>
-                  <a href={"https://bro-intranet.betty.app/profile/" + user?.id}>
+                    <a href={"https://bro-intranet-dev.betty.app/profile/" + user?.id}>
                   <p>
                     {user ? user.firstName +
                         ' ' +
@@ -71,7 +70,6 @@
     const CardManager = (props) => {
     const { cardData } = props;
     const [cards] = React.useState(cardData);
-    debugger;
     return (
       <ul>
         {cards[0].childArray.map(card => (        
@@ -90,17 +88,29 @@
       const toggleTeamList = props => {
         setChildVisibility(childVisibility => !childVisibility);
       };
+
+      const visibilityCheck = (childVisibility) => {
+        {childVisibility ? 
+          <Icon onClick={toggleTeamList} name="ExpandMore" />
+          :
+          <Icon onClick={toggleTeamList} name="ExpandLess" />
+          }
+
+      }
+      debugger;
       if (cardData) {
           return (
             <li key={cardData.id}>
                 <span>
                   <div>
-                    <h4>{cardData.childName}</h4>
-                    {childVisibility ? 
-                    <Icon onClick={toggleTeamList} name="ExpandMore" />
-                    :
+                    <h4>{cardData.childName}</h4> 
+                    {cardData.childArray?.length > 0 ? 
+                      childVisibility ?  
+                      <Icon onClick={toggleTeamList} name ="ExpandMore" />
+                      :
                     <Icon onClick={toggleTeamList} name="ExpandLess" />
-                    }
+                    : null 
+                  }
                   </div>
                   <div className={classes.employee_list}>
                       {cardData.childWebusers.length > 0 && (
@@ -158,7 +168,7 @@
         }
       });
       
-      //const Seen is an Array
+      //const uniqueObj is an Array
       const uniqueObj = new Set();
       const result = jsonObj.filter(
         (el) => {
@@ -412,15 +422,11 @@
       marginBottom: '2px',
     },
     employee_img: {
-      borderRadius: '50%',
+      borderRadius: '100%',
       position: 'relative',
 
       '&::after': {
         position: 'absolute',
-        left: '0',
-        top: '0',
-        right: '0',
-        bottom: '0',
         content: '""',
         boxShadow: 'inset 0 0 0 2px #fff, 0px 0px 2px 0px #999',
         borderRadius: '50%',
