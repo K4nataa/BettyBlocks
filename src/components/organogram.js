@@ -42,23 +42,23 @@
           <>
             {teammembers.map(user => (
               <>
-                <div className={classes.employee}>
-                  <div className={classes.employee_img}>
-                    <img
-                      src={user.profileImageUrl}
-                      className={classes.profile_pic}
-                      alt="Betty Logo"
-                    />
+                <a href={"https://bro-intranet-dev.betty.app/profile/" + user?.id}>
+                  <div className={classes.employee}>
+                    <div className={classes.employee_img}>
+                      <img
+                        src={user.profileImageUrl}
+                        className={classes.profile_pic}
+                        alt="Betty Logo"
+                      />
+                    </div>
+                    <p>
+                      {user ? user.firstName +
+                          ' ' +
+                          user.lastName
+                        : ' '}
+                    </p>
                   </div>
-                    <a href={"https://bro-intranet-dev.betty.app/profile/" + user?.id}>
-                  <p>
-                    {user ? user.firstName +
-                        ' ' +
-                        user.lastName
-                      : ' '}
-                  </p>
-                  </a>
-                </div>
+                </a>
               </>
             ))}
           </>
@@ -97,7 +97,6 @@
           }
 
       }
-      debugger;
       if (cardData) {
           return (
             <li key={cardData.id}>
@@ -173,9 +172,9 @@
       const result = jsonObj.filter(
         (el) => {
           if (el.childHierarchyLevel === 0) { 
-            // add the id to the set
-            // check if the set has the id
-            // if has return true it means its not unique so you want to filter it, if the has return false it means its unique and you return true to keep it in the array
+            // adds the id to the Set (Array)
+            // check if the Set already contains this id
+            // if the id is in the array, it drops the record. If the id is not in the array, it adds the record to the Array. 
             const duplicate = uniqueObj.has(el.id); 
             uniqueObj.add(el.id)
             return !duplicate
@@ -204,7 +203,6 @@
             }
 
             var result = SortJSON(data, parentName);
-            console.log('My JSON data contains: ', result);
             return (
               <div className={classes.org_tree}>
                 <CardManager cardData={result} />
@@ -214,32 +212,10 @@
         </Query>
       );
     }
-    //TODO: maak hier een column van (styling moet anders)
     if (isDev) {
       return (
         <div className={classes.org_tree}>
           <ul>
-            <li>
-              <span>
-              <div>
-                <h4>model.childName</h4>
-                  <Icon name="ExpandMore" />
-              </div>
-              <hr />
-              <div className={classes.employee}>
-                  <div className={classes.employee_img}>
-                    <img
-                      src=""
-                      className={classes.profile_pic}
-                      alt="Betty Logo"
-                    />
-                  </div>
-                  <p>
-                    user.Fullname
-                  </p>
-                </div>
-              </span>
-            </li>
             <li>
               <span>
               <div>
@@ -441,7 +417,6 @@
       padding: '0.5em 0 0 0.4em',
       '& a': {
         textDecoration: 'none',
-        marginLeft: '10px',
         color: 'black',
       },
     },
